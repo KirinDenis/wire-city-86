@@ -189,6 +189,8 @@ tmpsx   dw 0
 tmpsy   dw 0
 wr      db 0
 wc      db 0
+wbi     db 0                    ; window-block pixel loop (x)
+wbj     db 0                    ; window-block pixel loop (y)
 
 cdx     dw 0
 cdy     dw 0
@@ -1179,12 +1181,11 @@ HBLD:   mov  ax,[gi]
         and  bx,31              ; bits[5..9]  -> half depth  84..115
         add  bx,84
         mov  [bhd],bx
-        mov  bx,ax
-        mov  cl,10
-        shr  bx,cl
-        and  bx,255             ; bits[10..17] -> height 100..355
-        add  bx,100
-        mov  [bhgt2],bx
+        mov  bx,350             ; wide height spread: 60 + (hash*350)>>16
+        mul  bx                 ; dx:ax = hash*350 ; dx = high word = 0..349
+        mov  ax,dx
+        add  ax,60              ; height 60..409 (respawn at 420 still clears it)
+        mov  [bhgt2],ax
         mov  word ptr [bstreet],0
         ret
 @@st:   mov  word ptr [bstreet],1
@@ -1224,7 +1225,7 @@ WINFACE:
         mov  ax,[pk]
         cmp  ax,4
         jl   @@pj
-        ; grid 3 cols x 4 rows, bilinear in screen space
+        ; grid 3 cols x 5 rows, bilinear in screen space; each window = 3x3 px
         mov  byte ptr [wr],0
 @@rl:   mov  byte ptr [wc],0
 @@cl:
@@ -1274,14 +1275,14 @@ WINFACE:
         mov  ax,[sx1]
         sub  ax,[sx0]
         imul word ptr [wfv]
-        mov  bx,8
+        mov  bx,10
         idiv bx
         add  ax,[sx0]
         mov  [wpx],ax
         mov  ax,[sy1]
         sub  ax,[sy0]
         imul word ptr [wfv]
-        mov  bx,8
+        mov  bx,10
         idiv bx
         add  ax,[sy0]
         mov  [wpy],ax
@@ -1298,14 +1299,26 @@ WINFACE:
         jg   @@wn
         call WLIT2
         jz   @@wn
-        mov  ax,[wpx]
-        mov  bx,[wpy]
+        mov  byte ptr [wbj],0       ; draw a 3x3 window block (bigger windows)
+@@wby:  mov  byte ptr [wbi],0
+@@wbx:  mov  al,[wbi]
+        cbw
+        add  ax,[wpx]
+        mov  bl,[wbj]
+        xor  bh,bh
+        add  bx,[wpy]
         call PUTPIXEL
+        inc  byte ptr [wbi]
+        cmp  byte ptr [wbi],3
+        jl   @@wbx
+        inc  byte ptr [wbj]
+        cmp  byte ptr [wbj],3
+        jl   @@wby
 @@wn:   inc  byte ptr [wc]
         cmp  byte ptr [wc],3
         jl   @@cl
         inc  byte ptr [wr]
-        cmp  byte ptr [wr],4
+        cmp  byte ptr [wr],5
         jl   @@rl
 @@ret:  ret
 
@@ -2031,8 +2044,8 @@ CRASHHANDLE:
         call PRSTR
 @@w1:   cmp  byte ptr [KEYS+SC_SP],0
         je   @@w1
-        mov  word ptr [camy],120
-        mov  word ptr [roll],0
+        mov  word ptr [camy],420   ; respawn ABOVE the city (max bldg height 355)
+        mov  word ptr [roll],0     ; so we don't reappear inside the same tower
 @@w2:   cmp  byte ptr [KEYS+SC_SP],0
         jne  @@w2
         ret

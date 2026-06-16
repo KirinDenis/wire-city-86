@@ -1,9 +1,13 @@
 # WIRE CITY 86
 
+### ▶ Play online: https://kirindenis.github.io/wire-city-86/
+
 A wireframe night-flight over a procedural megacity, written in **8086 assembly**
 for **VGA mode 13h** and built with **Turbo Assembler (TASM)** into a tiny
 `.COM`. Integer math only, hidden-line removal via a painter's algorithm,
 near-plane clipping, free yaw steering with airplane-style banking.
+
+Runs in the browser via DOSBox compiled to WebAssembly ([js-dos](https://js-dos.com)).
 
 Fly forward, bank left/right through the streets, climb over the towers — or
 crash into one.
