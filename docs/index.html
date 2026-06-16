@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WIRE CITY 86</title>
+<link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+<style>
+  html,body{margin:0;height:100%;background:#04060f;color:#bcd;
+            font-family:monospace}
+  #wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;gap:10px;padding:12px;box-sizing:border-box}
+  h1{font-weight:bold;letter-spacing:3px;color:#bcf;margin:4px;
+     text-shadow:0 0 8px #46c}
+  #dos{width:min(96vw,720px);aspect-ratio:4/3;background:#000;
+       box-shadow:0 0 24px #1330}
+  .hint{font-size:13px;color:#89b;text-align:center}
+  a{color:#9bf}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>W I R E&nbsp;&nbsp;C I T Y&nbsp;&nbsp;8 6</h1>
+  <div class="hint">&larr;/&rarr; turn (bank) &nbsp;&middot;&nbsp; &uarr;/&darr; climb &nbsp;&middot;&nbsp; ESC quit &nbsp;&middot;&nbsp; click the screen first to grab the keyboard</div>
+  <div id="dos"></div>
+  <div class="hint">8086 / TASM wireframe flight, running in DOSBox (WASM) via <a href="https://js-dos.com" target="_blank" rel="noopener">js-dos</a></div>
+</div>
+
+<!-- If GitHub Pages reports a SharedArrayBuffer error, place coi-serviceworker.js
+     next to this file and uncomment the line below (see README). -->
+<!-- <script src="coi-serviceworker.js"></script> -->
+
+<script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+<script>
+  // js-dos v8: mount + autostart the bundle. If the API/CDN path differs in a
+  // newer js-dos release, adjust per https://js-dos.com docs.
+  Dos(document.getElementById("dos"), {
+    url: "city.jsdos",
+    autoStart: true,
+    kiosk: true,
+    backend: "dosbox"
+  });
+</script>
+</body>
+</html>

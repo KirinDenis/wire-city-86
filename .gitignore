@@ -1,55 +1,15 @@
-# Prerequisites
-*.d
-
-# Object files
-*.o
-*.ko
+# TASM / TLINK build artifacts
+*.OBJ
 *.obj
-*.elf
-
-# Linker output
-*.ilk
+*.MAP
 *.map
-*.exp
+*.bak
 
-# Precompiled Headers
-*.gch
-*.pch
+# editor / OS noise
+*~
+Thumbs.db
+.DS_Store
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# debug information files
-*.dwo
+# js-dos bundle staging (the final docs/city.jsdos IS committed for Pages)
+docs/.bundle/
+docs/city.zip
