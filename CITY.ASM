@@ -59,6 +59,7 @@ FOCAL   equ 160                 ; projection focal length
 CELL    equ 256                 ; grid pitch (doc only; code uses shl/shr 8 and 128)
 BIAS    equ 8192                ; world->cell bias (keeps cell math unsigned)
 RAD     equ 5                   ; building render radius (cells)
+MAXD2   equ RAD*RAD*2           ; max squared cell distance (painter buckets)
 GR      equ 6                   ; ground-grid radius (cells)
 NEARZ   equ 40                  ; near clip plane
 FARZ    equ 2400                ; far clip distance
@@ -520,9 +521,11 @@ GRID:   mov  byte ptr [COLOR],6
         ret
 
 ; ----- buildings: grid of cells around camera, drawn in far->near rings ------
-;  Painter's algorithm without a sort: visit cells in Chebyshev rings from
-;  RAD down to 0, so farther cells are drawn (and overdrawn) first. Exact
-;  Euclidean order isn't needed since buildings are separated by streets.
+;  Painter's algorithm: draw cells far->near ordered by SQUARED cell distance
+;  (di*di + dj*dj). This is the true Euclidean order, so diagonal far cells no
+;  longer overdraw nearer straight ones (the old Chebyshev-ring order did).
+;  Outer loop walks the d^2 bucket from MAXD2 down to 0; inner scan renders the
+;  cells whose di*di+dj*dj matches the current bucket. [ring] = current bucket.
 ;  (camgi/camgj are also set in RENDER before GRID; recomputed here too.)
 BUILDINGS:
         mov  ax,[camx]          ; camera cell = (pos+BIAS)>>8  (shr = floor /CELL)
@@ -535,63 +538,36 @@ BUILDINGS:
         mov  cl,8
         shr  ax,cl
         mov  [camgj],ax
-        mov  word ptr [ring],RAD
-@@rloop:
-        call RENDERRING
-        dec  word ptr [ring]
-        mov  ax,[ring]
-        cmp  ax,0
-        jge  @@rloop
-        ret
-
-; ----- render all cells at Chebyshev distance [ring] from camera cell -------
-RENDERRING:
-        mov  ax,[ring]
-        test ax,ax
-        jnz  @@r1
-        mov  word ptr [di],0
-        mov  word ptr [dj],0
-        call RENDERCELL
-        ret
-@@r1:   ; top & bottom edges: di = -ring..ring, dj = -+ring
-        mov  ax,[ring]
-        neg  ax
-        mov  [di],ax
-@@trow: mov  ax,[ring]
-        neg  ax
-        mov  [dj],ax
-        call RENDERCELL
-        mov  ax,[ring]
-        mov  [dj],ax
-        call RENDERCELL
-        mov  ax,[di]
-        inc  ax
-        mov  [di],ax
-        mov  bx,[ring]
-        cmp  ax,bx
-        jle  @@trow
-        ; left & right edges: dj = -ring+1..ring-1, di = -+ring
-        mov  ax,[ring]
-        neg  ax
-        inc  ax
-        mov  [dj],ax
-@@lcol: mov  ax,[dj]
-        mov  bx,[ring]
-        dec  bx
-        cmp  ax,bx
-        jg   @@done
-        mov  ax,[ring]
-        neg  ax
-        mov  [di],ax
-        call RENDERCELL
-        mov  ax,[ring]
-        mov  [di],ax
-        call RENDERCELL
+        mov  word ptr [ring],MAXD2
+@@d2:   mov  word ptr [di],-RAD
+@@iloop:
+        mov  word ptr [dj],-RAD
+@@jloop:
+        mov  ax,[di]            ; di*di + dj*dj
+        imul ax
+        mov  bx,ax
+        mov  ax,[dj]
+        imul ax
+        add  ax,bx
+        cmp  ax,[ring]
+        jne  @@jnext
+        call RENDERCELL         ; this cell is in the current distance bucket
+@@jnext:
         mov  ax,[dj]
         inc  ax
         mov  [dj],ax
-        jmp  @@lcol
-@@done: ret
+        cmp  ax,RAD
+        jle  @@jloop
+        mov  ax,[di]
+        inc  ax
+        mov  [di],ax
+        cmp  ax,RAD
+        jle  @@iloop
+        dec  word ptr [ring]
+        mov  ax,[ring]
+        cmp  ax,0
+        jge  @@d2
+        ret
 
 ; ----- render one city cell (di,dj relative to camera cell) -----------------
 ;  Looks up the building for cell (camgi+di, camgj+dj), rotates its 4
