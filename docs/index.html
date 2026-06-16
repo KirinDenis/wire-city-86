@@ -26,19 +26,16 @@
   <div class="hint">8086 / TASM wireframe flight, running in DOSBox (WASM) via <a href="https://js-dos.com" target="_blank" rel="noopener">js-dos</a></div>
 </div>
 
-<!-- If GitHub Pages reports a SharedArrayBuffer error, place coi-serviceworker.js
-     next to this file and uncomment the line below (see README). -->
-<!-- <script src="coi-serviceworker.js"></script> -->
+<!-- Enables cross-origin isolation (SharedArrayBuffer) on static hosts like
+     GitHub Pages, which can't send COOP/COEP headers. Must load FIRST; it
+     registers a service worker and reloads the page once to apply isolation. -->
+<script src="coi-serviceworker.js"></script>
 
 <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
 <script>
-  // js-dos v8: mount + autostart the bundle. If the API/CDN path differs in a
-  // newer js-dos release, adjust per https://js-dos.com docs.
+  // js-dos v8: minimal documented call. Bundle sits next to this file.
   Dos(document.getElementById("dos"), {
-    url: "city.jsdos",
-    autoStart: true,
-    kiosk: true,
-    backend: "dosbox"
+    url: "city.jsdos"
   });
 </script>
 </body>
