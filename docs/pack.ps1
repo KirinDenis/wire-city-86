@@ -16,10 +16,11 @@ $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$root = Split-Path -Parent $PSScriptRoot       # repo root (parent of docs)
-$com  = Join-Path $root "CITY.COM"
-$conf = Join-Path $root "docs\dosbox.conf"
-$out  = Join-Path $root "docs\city.jsdos"
+$root  = Split-Path -Parent $PSScriptRoot      # repo root (parent of docs)
+$com   = Join-Path $root "CITY.COM"
+$conf  = Join-Path $root "docs\dosbox.conf"        # full machine config + autoexec
+$rconf = Join-Path $root "docs\dosbox-root.conf"   # root override (cycles)
+$out   = Join-Path $root "docs\city.jsdos"
 
 if (-not (Test-Path $com)) {
     throw "CITY.COM not found in $root - build it first (see BUILD.BAT)."
@@ -38,8 +39,9 @@ function Add-ZipEntry($zip, $path, $name) {
     $stream.Close()
 }
 
-Add-ZipEntry $zip $com  "CITY.COM"
-Add-ZipEntry $zip $conf ".jsdos/dosbox.conf"
+Add-ZipEntry $zip $com   "CITY.COM"
+Add-ZipEntry $zip $conf  ".jsdos/dosbox.conf"      # full config (mounts c:, runs CITY.COM)
+Add-ZipEntry $zip $rconf "dosbox.conf"             # root override, matches js-dos studio layout
 
 $zip.Dispose()
 $fs.Close()
